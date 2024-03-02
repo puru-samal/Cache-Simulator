@@ -26,7 +26,7 @@ COMMENT
 COMMENT
 
 #: << COMMENT csim tests
-./csim -s 4 -E 3 -b 4 -t traces/csim/dave.trace 
+./csim -s 2 -E 3 -b 4 -t traces/csim/dave.trace 
 #COMMENT
 
 
