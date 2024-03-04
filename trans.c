@@ -115,6 +115,39 @@ static void trans_tmp(size_t M, size_t N, double A[N][M], double B[M][N],
     assert(is_transpose(M, N, A, B));
 }
 
+static void trans_block32(size_t M, size_t N, double A[N][M], double B[M][N],
+                          double tmp[TMPCOUNT]) {
+
+    assert(M > 0);
+    assert(N > 0);
+
+    size_t block_size = 8; // Transpose in blocks
+    size_t diag;           // index for diagonal elements
+    size_t tmp_ofst = 0;   // Offset into the tmp array
+
+    for (size_t ofstM = 0; ofstM < M; ofstM += block_size) {
+        for (size_t ofstN = 0; ofstN < N; ofstN += block_size) {
+            for (size_t r = ofstM; r < ofstM + block_size; r++) {
+                for (size_t c = ofstN; c < ofstN + block_size; c++) {
+
+                    if (r != c) {
+                        B[c][r] = A[r][c];
+                    } else {
+                        tmp_ofst = r + 72;
+                        assert(tmp_ofst < TMPCOUNT);
+                        tmp[tmp_ofst] = A[c][c];
+                        diag = r;
+                    }
+                }
+                if (ofstM == ofstN)
+                    B[diag][diag] = tmp[tmp_ofst];
+            }
+        }
+    }
+
+    assert(is_transpose(M, N, A, B));
+}
+
 /**
  * @brief The solution transpose function that will be graded.
  *
@@ -124,10 +157,12 @@ static void trans_tmp(size_t M, size_t N, double A[N][M], double B[M][N],
  */
 static void transpose_submit(size_t M, size_t N, double A[N][M], double B[M][N],
                              double tmp[TMPCOUNT]) {
-    if (M == N)
-        trans_basic(M, N, A, B, tmp);
-    else
+
+    if (M == 32 && N == 32) {
+        trans_block32(M, N, A, B, tmp);
+    } else {
         trans_tmp(M, N, A, B, tmp);
+    }
 }
 
 /**
@@ -144,4 +179,5 @@ void registerFunctions(void) {
     // Register any additional transpose functions
     registerTransFunction(trans_basic, "Basic transpose");
     registerTransFunction(trans_tmp, "Transpose using the temporary array");
+    registerTransFunction(trans_block32, "Transpose 32x32 with block");
 }
