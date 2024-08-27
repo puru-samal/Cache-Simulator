@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 /*
 
 Cache Simulator.
@@ -9,7 +7,7 @@ This program simulates memory accesses via a cache and the number
 of hits, misses, dirty bytes in cache and dirty bytes evicted
 based on cache configuration and the operations provided.
 
- Usage: ./csim [-hv] -s <s> -E <E> -b <b> -t <trace>\n");
+ Usage: ./csim [-hv] -s <s> -E <E> -b <b> -t <trace>
     -h          Prints help message
     -v          Verbose mode: Reports effects of each memory operation
     -s <s>      Number of set index bits. (there are 2**s sets)
@@ -22,15 +20,8 @@ Format for trace files: op addr,size
 The Cache is implemented as an array of singly-linked lists as it simplifies
 the process of maintaining order of elements based on how recently they were
 used, which is required to handle eviction under the LRU policy.
-Here is a quick summary of how the program works:
-
-- Arguments are parsed and a new Cache is created
-- The file provided as an argument is parsed
-
-
 */
 
->>>>>>> 126ffe2 (trans_32 added)
 #include "cachelab.h"
 #include "ctype.h"
 #include <assert.h>
@@ -39,18 +30,10 @@ Here is a quick summary of how the program works:
 #include <stdlib.h>
 #include <unistd.h>
 
-<<<<<<< HEAD
-#define DEBUG
-// #define DEBUG_PARSE_ARGS
-// #define DEBUG_FILE_READ
-#define DEGUB_CACHE
-
-=======
 /* Uncommenting this definition will enable
    the assertions used while writing the program */
 
 // #define DEBUG
->>>>>>> 126ffe2 (trans_32 added)
 #ifdef DEBUG
 #define ASSERT(COND) assert(COND)
 #define REQUIRES(COND) assert(COND)
@@ -61,11 +44,6 @@ Here is a quick summary of how the program works:
 #define REQUIRES(COND) ((void)0)
 #define ENSURES(COND) ((void)0)
 #define IF_DEBUG(CMD) ((void)0)
-<<<<<<< HEAD
-
-#endif
-
-=======
 #endif
 
 /* Uncommenting this line will print the prosessed arguments */
@@ -84,7 +62,6 @@ Here is a quick summary of how the program works:
 
 /* Helper function that prints usuage whrn the -h flag is set */
 
->>>>>>> 126ffe2 (trans_32 added)
 void print_usage(void) {
     printf("Usage: ./csim [-hv] -s <s> -E <E> -b <b> -t <trace>\n");
     printf("  -h\t\tPrint this help message.\n");
@@ -95,12 +72,9 @@ void print_usage(void) {
     printf("  -t <trace>\tFile name of the memory trace to process\n\n");
 }
 
-<<<<<<< HEAD
-=======
 /* Helper function that checks if the arguments provided are valid
    and prints and error message if invavid before calling exit(1) */
 
->>>>>>> 126ffe2 (trans_32 added)
 void validate(const int *m, int *s, int *b, int *E, char *tFile, int *t) {
 
     if (*s == -1 || *b == -1 || *E == -1 || tFile == NULL) {
@@ -125,13 +99,10 @@ void validate(const int *m, int *s, int *b, int *E, char *tFile, int *t) {
     }
 }
 
-<<<<<<< HEAD
-=======
 /* Helper function that parses the command line arguments and appropriately
    sets the values of the addresses provided. This function does not check for
    the corectness og arguments. That is handled by vallidate. */
 
->>>>>>> 126ffe2 (trans_32 added)
 void parse_args(int argc, char **argv, int *s, int *b, int *E, int *vFlag,
                 char **tFile) {
     int c = 0;
@@ -164,10 +135,6 @@ void parse_args(int argc, char **argv, int *s, int *b, int *E, int *vFlag,
     }
 }
 
-<<<<<<< HEAD
-typedef struct line {
-    long tag;
-=======
 /************************* Data Structures for the Cache Simulator
  * *************************************/
 
@@ -180,30 +147,10 @@ typedef unsigned long word_t;
 typedef struct line {
     word_t dirty;
     word_t tag;
->>>>>>> 126ffe2 (trans_32 added)
     int valid;
     struct line *next;
 } Line;
 
-<<<<<<< HEAD
-typedef struct set {
-    int E;
-    size_t size;
-    Line *head; // LRU
-    Line *tail; // MRU
-} Set;
-
-typedef struct cache {
-    unsigned long S;
-    unsigned long hits;
-    unsigned long misses;
-    unsigned long evictions;
-    unsigned long dirty_evictions;
-    Set **Sets; // Array of Sets
-} Cache;
-
-Set *setNew(int E) {
-=======
 /* A member of Cache containing state info regarding
     number of lines and pointers to MRU line and LRU linen*/
 
@@ -234,23 +181,12 @@ typedef struct cache {
    be allocated, calls exit(1) */
 
 Set *setNew(word_t E) {
->>>>>>> 126ffe2 (trans_32 added)
 
     Set *S = malloc(sizeof(Set));
     if (S == NULL) {
         fprintf(stderr, "Failed to allocate memory\n");
         exit(1);
     }
-<<<<<<< HEAD
-    S->head = NULL;
-    S->tail = NULL;
-    S->size = 0;
-    S->E = E;
-
-    return S;
-}
-
-=======
     S->LRU = NULL;
     S->MRU = NULL;
     S->size = 0;
@@ -263,7 +199,6 @@ Set *setNew(word_t E) {
 
 /* Frees a Set and all its members */
 
->>>>>>> 126ffe2 (trans_32 added)
 void setFree(Set *S) {
     if (S == NULL)
         return;
@@ -273,29 +208,14 @@ void setFree(Set *S) {
         return;
     }
 
-<<<<<<< HEAD
-    Line *L = S->head;
-
-    while (L != S->tail) {
-=======
     Line *L = S->LRU;
 
     while (L != S->MRU) {
->>>>>>> 126ffe2 (trans_32 added)
         Line *curr = L;
         L = L->next;
         free(curr);
     }
 
-<<<<<<< HEAD
-    free(S->tail);
-    free(S);
-}
-
-bool setInsertTail(Set *S, long tag) {
-    if (S == NULL)
-        return false;
-=======
     free(S->MRU);
     free(S);
 }
@@ -328,7 +248,6 @@ int setInsertMRU(Set *S, word_t tag, word_t *is_dirty) {
     REQUIRES(is_dirty != NULL);
 
     // Takes in a pointer that indicates if byte is dirty
->>>>>>> 126ffe2 (trans_32 added)
 
     Line *new_line = malloc(sizeof(Line));
 
@@ -338,32 +257,6 @@ int setInsertMRU(Set *S, word_t tag, word_t *is_dirty) {
     }
 
     new_line->tag = tag;
-<<<<<<< HEAD
-
-    if (S->size == 0) {
-        S->head = new_line;
-        S->tail = new_line;
-    } else {
-        S->tail->next = new_line;
-        S->tail = S->tail->next;
-    }
-    S->size++;
-    return true;
-}
-
-bool setRemoveHead(Set *S) {
-    /* You need to fix up this code. */
-    if (S == NULL || S->size == 0)
-        return false;
-    Line *evict_line = S->head;
-    S->size--;
-    S->head = (S->size == 0) ? NULL : S->head->next;
-    free(evict_line);
-    return true;
-}
-
-void setPrint(Set *S, unsigned long set_num) {
-=======
     new_line->valid = 1;
     new_line->dirty = *is_dirty;
 
@@ -415,26 +308,12 @@ void setReplaceMRU(Set *S, Line *curr, Line *prev) {
 pretty print a representation of a cache */
 
 void setPrint(Set *S, word_t set_num) {
->>>>>>> 126ffe2 (trans_32 added)
 
     if (S == NULL)
         return;
 
     printf("Set: %lu\n", set_num);
 
-<<<<<<< HEAD
-    Line *ptr = S->head;
-    printf("  | LRU |\n");
-    printf("  ************\n");
-
-    for (int i = 0; i < S->E; i++) {
-        if (i < (int)S->size) {
-            ASSERT(ptr != NULL);
-            printf("  Valid: %d\n", ptr->valid);
-            printf("  tag: %lx\n", ptr->tag);
-            if (ptr == S->tail)
-                printf("\t\t| MRU |\n");
-=======
     Line *ptr = S->LRU;
     printf("  | LRU |\n");
     printf("  ************\n");
@@ -447,7 +326,6 @@ void setPrint(Set *S, word_t set_num) {
             printf("  dirty: %lx\n", ptr->dirty);
             if (ptr == S->MRU)
                 printf(" | MRU |\n");
->>>>>>> 126ffe2 (trans_32 added)
             ptr = ptr->next;
         } else {
             printf("  Valid: 0\n");
@@ -457,26 +335,17 @@ void setPrint(Set *S, word_t set_num) {
     }
 }
 
-<<<<<<< HEAD
-Cache *cacheNew(int s, int E) {
-
-    unsigned long S = 1UL << ((unsigned long)s);
-=======
 /* Creates a new Cache and returns a pointer to it. If space could not
    be allocated, calls exit(1) */
 
 Cache *cacheNew(int s, word_t E, int b, int t) {
 
->>>>>>> 126ffe2 (trans_32 added)
     Cache *C = calloc(1, sizeof(Cache));
     if (C == NULL) {
         fprintf(stderr, "Failed to allocate memory\n");
         exit(1);
     }
 
-<<<<<<< HEAD
-    C->S = S;
-=======
     word_t S = 1UL << ((word_t)s);
     word_t B = 1UL << ((word_t)b);
 
@@ -486,7 +355,6 @@ Cache *cacheNew(int s, word_t E, int b, int t) {
     C->S = S;
     C->E = E;
     C->B = B;
->>>>>>> 126ffe2 (trans_32 added)
 
     C->Sets = malloc(S * sizeof(Set *));
     if (C->Sets == NULL) {
@@ -494,32 +362,20 @@ Cache *cacheNew(int s, word_t E, int b, int t) {
         exit(1);
     }
 
-<<<<<<< HEAD
-    for (unsigned long i = 0; i < S; i++) {
-        C->Sets[i] = setNew(E);
-=======
     for (word_t i = 0; i < S; i++) {
         C->Sets[i] = setNew(C->E);
->>>>>>> 126ffe2 (trans_32 added)
     }
 
     return C;
 }
 
-<<<<<<< HEAD
-=======
 /* Frees a Set and all its members */
 
->>>>>>> 126ffe2 (trans_32 added)
 void cacheFree(Cache *C) {
     if (C == NULL)
         return;
 
-<<<<<<< HEAD
-    for (unsigned long i = 0; i < C->S; i++) {
-=======
     for (word_t i = 0; i < C->S; i++) {
->>>>>>> 126ffe2 (trans_32 added)
         setFree(C->Sets[i]);
     }
 
@@ -527,11 +383,8 @@ void cacheFree(Cache *C) {
     free(C);
 }
 
-<<<<<<< HEAD
-=======
 /* A function used to pretty print a representation of a cache */
 
->>>>>>> 126ffe2 (trans_32 added)
 void cachePrint(Cache *C) {
 
     if (C == NULL)
@@ -539,28 +392,15 @@ void cachePrint(Cache *C) {
 
     printf("Puru's Cache Sim\n");
     printf(" S: %lu\n", C->S);
-<<<<<<< HEAD
-    printf(" E: %d\n", C->Sets[0]->E);
-    printf(" hits: %lu\n", C->hits);
-    printf(" misses: %lu\n", C->misses);
-    printf(" evictions: %lu\n", C->evictions);
-    printf(" dirty_evictions: %lu\n", C->dirty_evictions);
-    printf("-------------------------------------------\n");
-
-    for (unsigned long i = 0; i < C->S; i++) {
-=======
     printf(" E: %lu\n", C->Sets[0]->E);
     printSummary(&C->stats);
     printf("-------------------------------------------\n");
 
     for (word_t i = 0; i < C->S; i++) {
->>>>>>> 126ffe2 (trans_32 added)
         setPrint(C->Sets[i], i);
     }
 }
 
-<<<<<<< HEAD
-=======
 /* A function that manages the the entire state of the
     cache based on the parsed operations */
 
@@ -639,7 +479,6 @@ void cacheProcess(Cache *C, char op, int vFlag, word_t addr) {
     return;
 }
 
->>>>>>> 126ffe2 (trans_32 added)
 int main(int argc, char **argv) {
 
     const int m = (int)sizeof(size_t) * 8; // Num bits in an addr
@@ -657,20 +496,6 @@ int main(int argc, char **argv) {
     printf("tFile: %s\n", tFile);
 #endif
 
-<<<<<<< HEAD
-    validate(&m, &s, &b, &E, tFile, &t);
-
-    Cache *cache = cacheNew(s, E);
-
-#ifdef DEGUB_CACHE
-    cachePrint(cache);
-#endif
-
-    FILE *traceFile;
-
-    char op;
-    unsigned long addr;
-=======
     /* Check if arguments passes are valic */
     validate(&m, &s, &b, &E, tFile, &t);
 
@@ -679,7 +504,6 @@ int main(int argc, char **argv) {
 
     char op;
     word_t addr;
->>>>>>> 126ffe2 (trans_32 added)
     int size;
     int ptr;
 
@@ -695,13 +519,6 @@ int main(int argc, char **argv) {
             exit(1);
         }
 
-<<<<<<< HEAD
-#ifdef DEBUG_FILE_READ
-        printf("%c %lx,%d\n", op, addr, size);
-#endif
-    }
-
-=======
         if (vFlag)
             printf("%c %lx,%d", op, addr, size);
 
@@ -714,7 +531,6 @@ int main(int argc, char **argv) {
     cachePrint(cache);
 #endif
 
->>>>>>> 126ffe2 (trans_32 added)
     fclose(traceFile);
     cacheFree(cache);
 
